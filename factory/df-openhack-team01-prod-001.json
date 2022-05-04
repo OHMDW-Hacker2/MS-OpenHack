@@ -1,0 +1,9 @@
+{
+	"name": "df-openhack-team01-prod-001",
+	"location": "northeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "66dc7c56-f242-444d-85f9-77d15b5ddb08",
+		"tenantId": "8af24dbb-db4c-493a-8cb3-2851b32545c9"
+	}
+}

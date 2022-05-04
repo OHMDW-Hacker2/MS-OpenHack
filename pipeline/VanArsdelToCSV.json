@@ -1,0 +1,181 @@
+{
+	"name": "VanArsdelToCSV",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach_f7t",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.cw_items",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy_f7t",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "Source",
+									"value": "@{item().source.schema}.@{item().source.table}"
+								},
+								{
+									"name": "Destination",
+									"value": "structured/VanArsdel/@{item().destination.fileName}"
+								}
+							],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": false
+							},
+							"inputs": [
+								{
+									"referenceName": "SourceDataset_f7t",
+									"type": "DatasetReference",
+									"parameters": {
+										"cw_schema": "@item().source.schema",
+										"cw_table": "@item().source.table"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DestinationDataset_f7t",
+									"type": "DatasetReference",
+									"parameters": {
+										"cw_fileName": "@item().destination.fileName"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"cw_items": {
+				"type": "Array",
+				"defaultValue": [
+					{
+						"source": {
+							"schema": "dbo",
+							"table": "Actors"
+						},
+						"destination": {
+							"fileName": "dboActors.txt"
+						}
+					},
+					{
+						"source": {
+							"schema": "dbo",
+							"table": "Customers"
+						},
+						"destination": {
+							"fileName": "dboCustomers.txt"
+						}
+					},
+					{
+						"source": {
+							"schema": "dbo",
+							"table": "MovieActors"
+						},
+						"destination": {
+							"fileName": "dboMovieActors.txt"
+						}
+					},
+					{
+						"source": {
+							"schema": "dbo",
+							"table": "Movies"
+						},
+						"destination": {
+							"fileName": "dboMovies.txt"
+						}
+					},
+					{
+						"source": {
+							"schema": "dbo",
+							"table": "OnlineMovieMappings"
+						},
+						"destination": {
+							"fileName": "dboOnlineMovieMappings.txt"
+						}
+					},
+					{
+						"source": {
+							"schema": "dbo",
+							"table": "Transactions"
+						},
+						"destination": {
+							"fileName": "dboTransactions.txt"
+						}
+					},
+					{
+						"source": {
+							"schema": "Hidden",
+							"table": "Customers"
+						},
+						"destination": {
+							"fileName": "HiddenCustomers.txt"
+						}
+					},
+					{
+						"source": {
+							"schema": "Hidden",
+							"table": "CustomerUpdates"
+						},
+						"destination": {
+							"fileName": "HiddenCustomerUpdates.txt"
+						}
+					},
+					{
+						"source": {
+							"schema": "Hidden",
+							"table": "Transactions"
+						},
+						"destination": {
+							"fileName": "HiddenTransactions.txt"
+						}
+					},
+					{
+						"source": {
+							"schema": "Hidden",
+							"table": "TransactionUpdates"
+						},
+						"destination": {
+							"fileName": "HiddenTransactionUpdates.txt"
+						}
+					}
+				]
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-05-03T13:53:24Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

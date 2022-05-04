@@ -1,0 +1,55 @@
+{
+	"name": "SourceDataset_bm9",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "CosmosDb1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "CosmosDbSqlApiCollection",
+		"schema": {
+			"type": "object",
+			"properties": {
+				"actors": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							}
+						}
+					}
+				},
+				"availabilityDate": {
+					"type": "string"
+				},
+				"genre": {
+					"type": "string"
+				},
+				"rating": {
+					"type": "string"
+				},
+				"releaseYear": {
+					"type": "integer"
+				},
+				"runtime": {
+					"type": "integer"
+				},
+				"streamingAvailabilityDate": {
+					"type": "string"
+				},
+				"tier": {
+					"type": "integer"
+				},
+				"title": {
+					"type": "string"
+				}
+			}
+		},
+		"typeProperties": {
+			"collectionName": "movies"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
