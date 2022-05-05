@@ -1,0 +1,129 @@
+{
+	"name": "customerWithAddress",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Addresses"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Customers"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "join1"
+				},
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          AddressID as string,",
+				"          CustomerID as string,",
+				"          AddressLine1 as string,",
+				"          AddressLine2 as string,",
+				"          City as string,",
+				"          State as string,",
+				"          ZipCode as integer,",
+				"          CreatedDate as string,",
+				"          UpdatedDate as string,",
+				"          SourceID as boolean,",
+				"          UniqueID as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'enriched',",
+				"     folderPath: 'addresses',",
+				"     fileName: 'addresses',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> Addresses",
+				"source(output(",
+				"          CustomerID as string,",
+				"          LastName as string,",
+				"          FirstName as string,",
+				"          PhoneNumber as long,",
+				"          CreatedDate as string,",
+				"          UpdatedDate as string,",
+				"          SourceID as short,",
+				"          UniqueID as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'enriched',",
+				"     folderPath: 'salesdata',",
+				"     fileName: 'part-merged.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> Customers",
+				"Addresses, Customers join(Addresses@CustomerID == Customers@CustomerID,",
+				"     joinType:'inner',",
+				"     broadcast: 'auto')~> join1",
+				"join1 select(mapColumn(",
+				"          AddressID,",
+				"          AddressLine1,",
+				"          AddressLine2,",
+				"          City,",
+				"          State,",
+				"          ZipCode,",
+				"          CreatedDate_address = Addresses@CreatedDate,",
+				"          UpdatedDate_address = Addresses@UpdatedDate,",
+				"          SourceID_address = Addresses@SourceID,",
+				"          UniqueID_address = Addresses@UniqueID,",
+				"          CustomerID = Customers@CustomerID,",
+				"          LastName,",
+				"          FirstName,",
+				"          PhoneNumber,",
+				"          CreatedDate = Customers@CreatedDate,",
+				"          UpdatedDate = Customers@UpdatedDate,",
+				"          SourceID = Customers@SourceID,",
+				"          UniqueID = Customers@UniqueID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'enriched',",
+				"     folderPath: 'customerWaddresses',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     partitionFileNames:['CustomersAddress'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}

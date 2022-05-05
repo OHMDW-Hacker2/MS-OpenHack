@@ -1,0 +1,135 @@
+{
+	"name": "addresses",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SouthridgeSales"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "VanArsdel"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SourceID01"
+				},
+				{
+					"name": "UniqueID01"
+				},
+				{
+					"name": "select02"
+				},
+				{
+					"name": "SourceID02"
+				},
+				{
+					"name": "UniqueID02"
+				},
+				{
+					"name": "union1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          AddressID as string,",
+				"          CustomerID as string,",
+				"          AddressLine1 as string,",
+				"          AddressLine2 as string,",
+				"          City as string,",
+				"          State as string,",
+				"          ZipCode as integer,",
+				"          CreatedDate as string,",
+				"          UpdatedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'structured',",
+				"     folderPath: 'sales',",
+				"     fileName: 'addresses.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> SouthridgeSales",
+				"source(output(",
+				"          CustomerID as string,",
+				"          LastName as string,",
+				"          FirstName as string,",
+				"          AddressLine1 as string,",
+				"          AddressLine2 as string,",
+				"          City as string,",
+				"          State as string,",
+				"          ZipCode as integer,",
+				"          PhoneNumber as long,",
+				"          CreatedDate as string,",
+				"          UpdatedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'structured',",
+				"     folderPath: 'VanArsdel',",
+				"     fileName: 'dboCustomers.txt',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> VanArsdel",
+				"SouthridgeSales derive(SourceID = 1) ~> SourceID01",
+				"SourceID01 derive(UniqueID = concat(toString(SourceID), CustomerID, AddressID)) ~> UniqueID01",
+				"VanArsdel select(mapColumn(",
+				"          CustomerID,",
+				"          AddressLine1,",
+				"          AddressLine2,",
+				"          City,",
+				"          State,",
+				"          ZipCode,",
+				"          CreatedDate,",
+				"          UpdatedDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select02",
+				"select02 derive(SourceID = 2,",
+				"          AddressID = uuid()) ~> SourceID02",
+				"SourceID02 derive(UniqueID = concat(toString(SourceID), CustomerID, AddressID)) ~> UniqueID02",
+				"UniqueID01, UniqueID02 union(byName: true)~> union1",
+				"union1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'enriched',",
+				"     folderPath: 'addresses',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     partitionFileNames:['addresses'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}

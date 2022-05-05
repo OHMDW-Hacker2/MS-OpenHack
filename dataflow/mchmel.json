@@ -1,0 +1,169 @@
+{
+	"name": "mchmel",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SouthridgeCustomers"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "vanArsdelCustomers"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "fourthCustomers"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "addSourceID01"
+				},
+				{
+					"name": "addSourceID02"
+				},
+				{
+					"name": "union1"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "union2"
+				},
+				{
+					"name": "select2"
+				},
+				{
+					"name": "addSourceID03"
+				}
+			],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'structured',",
+				"     folderPath: 'sales',",
+				"     fileName: 'dboCustomers.txt',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> SouthridgeCustomers",
+				"source(output(",
+				"          CustomerID as string,",
+				"          LastName as string,",
+				"          FirstName as string,",
+				"          AddressLine1 as string,",
+				"          AddressLine2 as string,",
+				"          City as string,",
+				"          State as string,",
+				"          ZipCode as integer,",
+				"          PhoneNumber as string,",
+				"          CreatedDate as string,",
+				"          UpdatedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'structured',",
+				"     folderPath: 'VanArsdel',",
+				"     fileName: 'dboCustomers.txt',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> vanArsdelCustomers",
+				"source(output(",
+				"          CustomerID as string,",
+				"          LastName as string,",
+				"          FirstName as string,",
+				"          AddressLine1 as string,",
+				"          AddressLine2 as string,",
+				"          City as string,",
+				"          State as string,",
+				"          ZipCode as string,",
+				"          PhoneNumber as string,",
+				"          CreatedDate as string,",
+				"          UpdatedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'structured',",
+				"     folderPath: 'FourthCoffee',",
+				"     fileName: 'Customers.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> fourthCustomers",
+				"SouthridgeCustomers derive(SourceID = 1) ~> addSourceID01",
+				"select1 derive(SourceID = 2) ~> addSourceID02",
+				"addSourceID01, union2 union(byName: true)~> union1",
+				"vanArsdelCustomers select(mapColumn(",
+				"          CustomerID,",
+				"          LastName,",
+				"          FirstName,",
+				"          PhoneNumber,",
+				"          CreatedDate,",
+				"          UpdatedDate",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> select1",
+				"union1 derive(UniqueID = concat(toString(SourceID) , CustomerID)) ~> derivedColumn1",
+				"addSourceID02, addSourceID03 union(byName: true)~> union2",
+				"fourthCustomers select(mapColumn(",
+				"          CustomerID,",
+				"          LastName,",
+				"          FirstName,",
+				"          PhoneNumber,",
+				"          CreatedDate,",
+				"          UpdatedDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"select2 derive(SourceID = 3) ~> addSourceID03",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'enriched',",
+				"     folderPath: 'salesdata',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}

@@ -1,0 +1,187 @@
+{
+	"name": "trnsctnsjg",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SouthridgeData"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "VanArsdelData"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "FourthCofee"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "trnsctnsll"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SourceIDSouth"
+				},
+				{
+					"name": "SourceIDVan"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "select2"
+				},
+				{
+					"name": "SourceIDFourt"
+				},
+				{
+					"name": "select3"
+				},
+				{
+					"name": "ALL"
+				},
+				{
+					"name": "uniqids"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          TransactionID as string,",
+				"          CustomerID as string,",
+				"          MovieID as string,",
+				"          StreamStart as string,",
+				"          StreamEnd as string,",
+				"          CreatedDate as string,",
+				"          UpdatedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'structured',",
+				"     folderPath: 'streaming',",
+				"     fileName: 'dboTransactions.txt',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> SouthridgeData",
+				"source(output(",
+				"          TransactionID as string,",
+				"          CustomerID as string,",
+				"          MovieID as string,",
+				"          RentalDate as string,",
+				"          ReturnDate as string,",
+				"          RentalCost as string,",
+				"          LateFee as string,",
+				"          RewindFlag as string,",
+				"          CreatedDate as string,",
+				"          UpdatedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'structured',",
+				"     folderPath: 'VanArsdel',",
+				"     fileName: 'dboTransactions.txt',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> VanArsdelData",
+				"source(output(",
+				"          TransactionID as string,",
+				"          CustomerID as string,",
+				"          MovieID as string,",
+				"          RentalDate as string,",
+				"          ReturnDate as string,",
+				"          RentalCost as string,",
+				"          LateFee as string,",
+				"          RewindFlag as string,",
+				"          CreatedDate as string,",
+				"          UpdatedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'structured',",
+				"     folderPath: 'FourthCoffee',",
+				"     fileName: 'Transactions.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> FourthCofee",
+				"SouthridgeData derive(SourceID = 1) ~> SourceIDSouth",
+				"VanArsdelData derive(SourceID = 2) ~> SourceIDVan",
+				"SourceIDVan select(mapColumn(",
+				"          TransactionID,",
+				"          CustomerID,",
+				"          MovieID,",
+				"          StreamStart = RentalDate,",
+				"          StreamEnd = ReturnDate,",
+				"          SourceID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"SourceIDSouth select(mapColumn(",
+				"          TransactionID,",
+				"          CustomerID,",
+				"          MovieID,",
+				"          StreamStart,",
+				"          StreamEnd,",
+				"          SourceID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"FourthCofee derive(SourceID = 3) ~> SourceIDFourt",
+				"SourceIDFourt select(mapColumn(",
+				"          TransactionID,",
+				"          CustomerID,",
+				"          MovieID,",
+				"          StreamStart = RentalDate,",
+				"          StreamEnd = ReturnDate,",
+				"          SourceID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select3",
+				"select2, select1, select3 union(byName: true)~> ALL",
+				"ALL derive(UniqueOrderID = concat(toString(byName('SourceID')),toString(byName('TransactionID'))),",
+				"          UniqueMovieID = concat(toString(byName('SourceID')),toString(byName('MovieID'))),",
+				"          UniqueCustomerID = concat(toString(byName('SourceID')),toString(byName('CustomerID')))) ~> uniqids",
+				"uniqids sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'enriched',",
+				"     folderPath: 'transactions',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     partitionFileNames:['transactions'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> trnsctnsll"
+			]
+		}
+	}
+}
